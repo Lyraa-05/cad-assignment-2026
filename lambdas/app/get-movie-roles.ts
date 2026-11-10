@@ -9,7 +9,7 @@ import {
   tableName,
   toRole,
 } from "../shared/db";
-import { response } from "../shared/http";
+import { response, serverError } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
 
 // GET /movies/{movieID}/roles?[actor=actorID]
@@ -41,8 +41,7 @@ export const handler = async (
       .filter((role) => actorId === undefined || role.actorId === actorId);
     return response(200, { data: roles });
   } catch (err) {
-    console.error("DynamoDB error:", err);
-    return response(500, { message: "Internal server error" });
+    return serverError("DynamoDB error", err);
   }
 };
 

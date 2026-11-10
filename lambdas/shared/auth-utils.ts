@@ -1,6 +1,6 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
-import { isResponse, parseJsonObject, response } from './http';
+import { isResponse, parseJsonObject, response, serverError } from './http';
 
 export { isResponse, response };
 
@@ -40,10 +40,7 @@ const cognitoErrorStatus: Record<string, number> = {
 export const cognitoErrorResponse = (err: unknown): APIGatewayProxyResult => {
   const name = (err as Error).name;
   const status = cognitoErrorStatus[name];
-  if (!status) {
-    console.error('Unexpected Cognito error:', err);
-    return response(500, { message: 'Internal server error' });
-  }
+  if (!status) return serverError('Unexpected Cognito error', err);
   const message =
     name === 'UserNotFoundException' ? 'Incorrect username or password.' : (err as Error).message;
   return response(status, { message, error: name });

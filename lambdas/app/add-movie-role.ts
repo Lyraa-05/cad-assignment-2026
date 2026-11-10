@@ -2,7 +2,7 @@ import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { TransactionCanceledException } from "@aws-sdk/client-dynamodb";
 import { actorKey, ddb, movieKey, type Role, tableName } from "../shared/db";
-import { isResponse, parseJsonObject, response } from "../shared/http";
+import { isResponse, parseJsonObject, response, serverError } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
 
 // POST /movies/roles  { movieId, actorId, roleName, roleDescription }
@@ -64,8 +64,7 @@ export const handler = async (
     if (err instanceof TransactionCanceledException) {
       return cancelledResponse(err, role);
     }
-    console.error("DynamoDB error:", err);
-    return response(500, { message: "Internal server error" });
+    return serverError("DynamoDB error", err);
   }
 };
 
@@ -100,6 +99,5 @@ const cancelledResponse = (
       message: `Actor ${role.actorId} already has a role in movie ${role.movieId}`,
     });
   }
-  console.error("Transaction cancelled:", err);
-  return response(500, { message: "Internal server error" });
+  return serverError("Transaction cancelled", err);
 };

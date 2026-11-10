@@ -9,7 +9,7 @@ import {
   toActor,
   toRole,
 } from "../shared/db";
-import { response } from "../shared/http";
+import { response, serverError } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
 
 // GET /actors/{actorID}?[movie=movieID]
@@ -51,8 +51,7 @@ export const handler = async (
       data: { ...actor, role: roleItem ? toRole(roleItem) : null },
     });
   } catch (err) {
-    console.error("DynamoDB error:", err);
-    return response(500, { message: "Internal server error" });
+    return serverError("DynamoDB error", err);
   }
 };
 

@@ -10,6 +10,13 @@ export const response = (
   body: JSON.stringify(body),
 });
 
+// Logs an unexpected error and returns a generic 500, so internal details
+// (e.g. DynamoDB or Cognito error messages) are never sent to the client.
+export const serverError = (context: string, err: unknown): APIGatewayProxyResult => {
+  console.error(`${context}:`, err);
+  return response(500, { message: 'Internal server error' });
+};
+
 export const isResponse = (value: object): value is APIGatewayProxyResult => 'statusCode' in value;
 
 // Parses a JSON object request body, or returns a 400 response.

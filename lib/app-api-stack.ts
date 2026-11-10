@@ -88,6 +88,23 @@ export class AppApiStack extends cdk.Stack {
       },
     });
 
+    // JSON error bodies, matching the lambdas' { message } format, for requests
+    // rejected by API Gateway before they reach a lambda.
+    const gatewayErrors: [string, apig.ResponseType, string, string][] = [
+      ['MissingToken', apig.ResponseType.UNAUTHORIZED, '401', 'Missing token cookie. Sign in using the Auth API.'],
+      ['InvalidToken', apig.ResponseType.ACCESS_DENIED, '401', 'Invalid or expired token. Sign in using the Auth API.'],
+      ['InvalidApiKey', apig.ResponseType.INVALID_API_KEY, '403', 'Missing or invalid API key.'],
+      ['UnknownRoute', apig.ResponseType.MISSING_AUTHENTICATION_TOKEN, '404', 'Resource not found.'],
+    ];
+    for (const [id, type, statusCode, message] of gatewayErrors) {
+      api.addGatewayResponse(id, {
+        type,
+        statusCode,
+        responseHeaders: { 'Access-Control-Allow-Origin': "'*'" },
+        templates: { 'application/json': JSON.stringify({ message }) },
+      });
+    }
+
     const userAuth: apig.MethodOptions = {
       authorizer: userAuthorizer,
       authorizationType: apig.AuthorizationType.CUSTOM,

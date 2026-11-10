@@ -12,6 +12,7 @@ import { seedItems } from '../seed/movie-cast';
 export interface AppApiStackProps extends cdk.StackProps {
   userPool: cognito.IUserPool;
   userPoolClient: cognito.IUserPoolClient;
+  authApiUrl: string;
 }
 
 export class AppApiStack extends cdk.Stack {
@@ -134,6 +135,8 @@ export class AppApiStack extends cdk.Stack {
     });
     usagePlan.addApiKey(adminApiKey);
 
+    // Repeated from the Cognito stack so all URLs needed by clients appear together.
+    new cdk.CfnOutput(this, 'AuthApiUrl', { value: props.authApiUrl });
     new cdk.CfnOutput(this, 'AdminApiKeyId', {
       value: adminApiKey.keyId,
       description: 'aws apigateway get-api-key --include-value --api-key <id> to read the key',

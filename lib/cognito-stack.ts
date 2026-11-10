@@ -9,6 +9,7 @@ import { Construct } from 'constructs';
 export class CognitoStack extends cdk.Stack {
   public readonly userPool: cognito.UserPool;
   public readonly userPoolClient: cognito.UserPoolClient;
+  public readonly authApiUrl: string;
 
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
@@ -61,7 +62,8 @@ export class CognitoStack extends cdk.Stack {
         .addMethod('POST', new apig.LambdaIntegration(authFn(name, entry)));
     }
 
-    new cdk.CfnOutput(this, 'AuthApiUrl', { value: authApi.url });
+    this.authApiUrl = authApi.url;
+    new cdk.CfnOutput(this, 'AuthApiUrl', { value: this.authApiUrl });
     new cdk.CfnOutput(this, 'UserPoolId', { value: this.userPool.userPoolId });
     new cdk.CfnOutput(this, 'UserPoolClientId', { value: this.userPoolClient.userPoolClientId });
   }

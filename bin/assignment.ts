@@ -12,4 +12,5 @@ new AppApiStack(app, 'AppApiStack', {
   env,
   userPool: cognitoStack.userPool,
   userPoolClient: cognitoStack.userPoolClient,
+  authApiUrl: cognitoStack.authApiUrl,
 });

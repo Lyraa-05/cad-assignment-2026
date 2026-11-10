@@ -3,13 +3,16 @@ import { GetCommand } from "@aws-sdk/lib-dynamodb";
 import {
   actorKey,
   ddb,
+  movieKey,
   parseId,
   tableName,
   toActor,
+  toRole,
 } from "../shared/db";
 import { response } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
 
+// GET /actors/{actorID}?[movie=movieID]
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
@@ -25,21 +28,37 @@ export const handler = async (
   if (movieParam !== undefined && movieId === undefined) {
     return response(400, { message: "movie must be a positive integer" });
   }
-  try {
-    const actorResult = await ddb.send(
-      new GetCommand({
-        TableName: tableName,
-        Key: { PK: actorKey(actorId), SK: actorKey(actorId) },
-      })
-    );
 
-    if (!actorResult.Item) {
+  try {
+    const actorItem = await getItem(actorKey(actorId), actorKey(actorId));
+    if (!actorItem) {
       return response(404, { message: `Actor ${actorId} not found` });
     }
-    const actor = toActor(actorResult.Item);
-    return response(200, { data: actor });
+    const actor = toActor(actorItem);
+    if (movieId === undefined) {
+      return response(200, { data: actor });
+    }
+
+    const [movieItem, roleItem] = await Promise.all([
+      getItem(movieKey(movieId), movieKey(movieId)),
+      getItem(movieKey(movieId), actorKey(actorId)),
+    ]);
+    if (!movieItem) {
+      return response(404, { message: `Movie ${movieId} not found` });
+    }
+    // role is null when the actor didn't appear in the movie.
+    return response(200, {
+      data: { ...actor, role: roleItem ? toRole(roleItem) : null },
+    });
   } catch (err) {
     console.error("DynamoDB error:", err);
-    return response(500, { message: "Internal server error", error: err });
+    return response(500, { message: "Internal server error" });
   }
+};
+
+const getItem = async (pk: string, sk: string) => {
+  const { Item } = await ddb.send(
+    new GetCommand({ TableName: tableName, Key: { PK: pk, SK: sk } })
+  );
+  return Item;
 };

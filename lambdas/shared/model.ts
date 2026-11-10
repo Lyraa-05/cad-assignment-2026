@@ -48,6 +48,13 @@ export const toActor = ({ actorId, name, dateOfBirth, bio }: Record<string, any>
   bio,
 });
 
+// Request validation, shared by the App and Auth API lambdas.
+export const isPositiveInteger = (value: unknown): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value > 0;
+
+export const isNonEmptyString = (value: unknown): value is string =>
+  typeof value === 'string' && value.trim() !== '';
+
 // Parses a path or query string ID; undefined if it isn't a positive integer.
 export const parseId = (value: string | undefined): number | undefined =>
   value !== undefined && /^[1-9]\d*$/.test(value) ? Number(value) : undefined;

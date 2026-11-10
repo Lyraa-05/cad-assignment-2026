@@ -1,6 +1,7 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import { CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
 import { isResponse, parseJsonObject, response, serverError } from './http';
+import { isNonEmptyString } from './model';
 
 export { isResponse, response };
 
@@ -15,7 +16,7 @@ export const parseBody = (
 ): Record<string, string> | APIGatewayProxyResult => {
   const body = parseJsonObject(event);
   if (isResponse(body)) return body;
-  const missing = fields.filter((f) => typeof body[f] !== 'string' || body[f] === '');
+  const missing = fields.filter((f) => !isNonEmptyString(body[f]));
   if (missing.length) {
     return response(400, { message: `Missing or invalid fields: ${missing.join(', ')}` });
   }

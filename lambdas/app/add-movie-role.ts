@@ -1,7 +1,15 @@
 import type { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { TransactWriteCommand } from "@aws-sdk/lib-dynamodb";
 import { TransactionCanceledException } from "@aws-sdk/client-dynamodb";
-import { actorKey, ddb, movieKey, type Role, tableName } from "../shared/db";
+import {
+  actorKey,
+  ddb,
+  isNonEmptyString,
+  isPositiveInteger,
+  movieKey,
+  type Role,
+  tableName,
+} from "../shared/db";
 import { isResponse, parseJsonObject, response, serverError } from "../shared/http";
 import { logRequest } from "../shared/request-logger";
 
@@ -67,12 +75,6 @@ export const handler = async (
     return serverError("DynamoDB error", err);
   }
 };
-
-const isPositiveInteger = (value: unknown) =>
-  typeof value === "number" && Number.isInteger(value) && value > 0;
-
-const isNonEmptyString = (value: unknown) =>
-  typeof value === "string" && value.trim() !== "";
 
 // Names of the body fields that are missing or of the wrong type.
 const validateRole = (body: Record<string, unknown>): string[] => [

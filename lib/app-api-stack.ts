@@ -100,11 +100,26 @@ export class AppApiStack extends cdk.Stack {
 
     moviesResource
       .addResource('roles')
-      .addMethod('POST', new apig.LambdaIntegration(addMovieRoleFn));
+      .addMethod('POST', new apig.LambdaIntegration(addMovieRoleFn), { apiKeyRequired: true });
 
     api.root
       .addResource('actors')
       .addResource('{actorID}')
       .addMethod('GET', new apig.LambdaIntegration(getActorFn), userAuth);
+
+    // Administrator API key; API Gateway generates its value at deployment time.
+    const adminApiKey = api.addApiKey('AdminApiKey', {
+      description: 'API key for administrator (POST) requests',
+    });
+    const usagePlan = api.addUsagePlan('AdminUsagePlan', {
+      name: 'AdminUsagePlan',
+      apiStages: [{ api, stage: api.deploymentStage }],
+    });
+    usagePlan.addApiKey(adminApiKey);
+
+    new cdk.CfnOutput(this, 'AdminApiKeyId', {
+      value: adminApiKey.keyId,
+      description: 'aws apigateway get-api-key --include-value --api-key <id> to read the key',
+    });
   }
 }
